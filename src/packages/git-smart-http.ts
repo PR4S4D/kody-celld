@@ -1,6 +1,6 @@
-import { inflateSync } from 'node:zlib'
 import { KodyError } from '../lib/errors.ts'
 import type { PackageFiles } from './manifest.ts'
+import { inflateZlibAt } from './zlib-inflate.ts'
 
 export type FetchLike = (input: string, init: RequestInit) => Promise<Response>
 
@@ -285,14 +285,9 @@ function demuxUploadPack(bytes: Uint8Array) {
 }
 
 function inflateAt(bytes: Uint8Array, offset: number) {
-	const result = inflateSync(bytes.subarray(offset), { info: true }) as unknown as {
-		buffer: Buffer
-		engine: { bytesWritten: number }
-	}
-	return {
-		output: new Uint8Array(result.buffer.buffer, result.buffer.byteOffset, result.buffer.byteLength),
-		bytesRead: result.engine.bytesWritten,
-	}
+	// Not node:zlib `inflateSync(…, { info: true })`: Deno's node-compat zlib
+	// ignores `info`, so `engine.bytesWritten` was undefined on celld.
+	return inflateZlibAt(bytes, offset)
 }
 
 function readVarInt(bytes: Uint8Array, offset: number) {
