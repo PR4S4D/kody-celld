@@ -364,7 +364,7 @@ export const packageUpdate = defineCapability<{ name: string }>({
 	domain: 'packages',
 	name: 'packageUpdate',
 	description:
-		'Re-install a saved package from where it came from: a github:/kody.codes/URL source or a community listing. Fails for packages saved from an in-memory file map or forks.',
+		'Re-install a saved package from where it came from: a github:/kody.codes/URL source or a community listing. Returns the same provenance fields as packageInstall (source, fetchedFrom, commit for git clones). Fails for packages saved from an in-memory file map or forks.',
 	tags: ['packages', 'write'],
 	keywords: ['update package', 'upgrade package', 'reinstall', 'pull latest'],
 	inputSchema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
