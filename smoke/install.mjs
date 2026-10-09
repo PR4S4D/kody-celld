@@ -3,7 +3,7 @@
 // Does not fetch this repo's live github: tarball — main's file count can exceed
 // the product 400-file archive ceiling and flake independently of install logic.
 import { assert, log } from './lib.mjs'
-import { startPackageFixtureServer } from './package-fixture-server.mjs'
+import { gitPackageName, startPackageFixtureServer } from './package-fixture-server.mjs'
 
 export async function smokeInstall({ mcp }) {
 	// Policy checks need no network at all.
@@ -109,6 +109,37 @@ export default async function main() { return await kody.packageInstall({ source
 			updated,
 		)
 		log('packageUpdate', { version: updated.version, previousVersion: updated.previousVersion })
+
+		// Same fixture over `.git` smart HTTP (exercises pack inflate on celld).
+		const gitPreview = await mcp.call('packagePreview', { source: fixture.gitUrl, path: 'probe.js' })
+		assert(
+			gitPreview.name === gitPackageName &&
+				gitPreview.commit === fixture.gitCommit &&
+				gitPreview.file?.path === 'probe.js' &&
+				gitPreview.file.content.includes('{{secret:'),
+			'git packagePreview returns the requested file and commit',
+			gitPreview,
+		)
+		const gitInstalled = await mcp.call('packageInstall', { source: fixture.gitUrl })
+		assert(gitInstalled.name === gitPackageName, 'git install wrong package', gitInstalled)
+		assert(gitInstalled.commit === fixture.gitCommit, 'git install commit', gitInstalled)
+		assert(
+			String(gitInstalled.fetchedFrom).endsWith('/git-upload-pack'),
+			'git install should fetch via upload-pack',
+			gitInstalled.fetchedFrom,
+		)
+		log('git packageInstall', {
+			name: gitInstalled.name,
+			commit: gitInstalled.commit,
+			fetchedFrom: gitInstalled.fetchedFrom,
+		})
+		const gitUpdated = await mcp.call('packageUpdate', { name: gitPackageName })
+		assert(
+			gitUpdated.source === fixture.gitUrl && gitUpdated.commit === fixture.gitCommit,
+			'git update kept provenance',
+			gitUpdated,
+		)
+		log('git packageUpdate', { commit: gitUpdated.commit })
 	} finally {
 		await fixture.close()
 	}

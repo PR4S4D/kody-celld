@@ -45,6 +45,7 @@
   "dependencies": {
     "es-module-lexer": "2.3.2",
     "marked": "^18.1.0",
+    "pako": "3.0.2",
     "postal-mime": "3.0.0",
     "remix": "3.0.0",
     "shiki": "^4.5.0"
