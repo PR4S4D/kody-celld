@@ -396,9 +396,21 @@ export const packageUpdate = defineCapability<{ name: string }>({
 			actor: `user:${ctx.user.id}`,
 			action: 'package.update',
 			target: saved.name,
-			details: { version: saved.version, previousVersion: pkg.version, source: fetched.source },
+			details: {
+				version: saved.version,
+				previousVersion: pkg.version,
+				source: fetched.source,
+				commit: fetched.commit ?? null,
+			},
 		})
-		return { ...saved, previousVersion: pkg.version, fetchedFrom: fetched.fetchedFrom, warnings: fetched.warnings }
+		// Match packageInstall: git clones surface the resolved commit on update too.
+		return {
+			...saved,
+			previousVersion: pkg.version,
+			fetchedFrom: fetched.fetchedFrom,
+			commit: fetched.commit ?? null,
+			warnings: fetched.warnings,
+		}
 	},
 })
 
